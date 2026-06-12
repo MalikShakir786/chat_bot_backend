@@ -8,3 +8,7 @@ faiss-cpu
 chromadb
 langchain-groq
 python-dotenv
+uvicorn
+fastapi
+sqlalchemy
+psycopg2
