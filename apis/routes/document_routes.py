@@ -10,7 +10,7 @@ from apis.services.rag_service import ingest_document
 router = APIRouter(prefix=prefix, tags=["Documents"])
         
 
-router.post(DocumentRoutes.UPLOAD, response_model = DocumentResponse)
+@router.post(DocumentRoutes.UPLOAD, response_model = DocumentResponse)
 def create_document(doc: DocumentCreate, db: Session = Depends(get_db)):
     new_doc = DBDocument(**doc.model_dump())
     db.add(new_doc)
