@@ -1,0 +1,30 @@
+
+Machine Learning (ML) is a branch of Artificial Intelligence (AI) that enables computers to learn from data and make decisions or predictions without being explicitly programmed for every task.
+
+Instead of writing fixed rules, we provide data to the system, and it learns patterns from that data. Over time, the system improves its performance as it is exposed to more information.
+
+🤖 How it works
+
+In Machine Learning:
+
+
+You give the system data
+It finds patterns and relationships
+It builds a model
+The model is used to make predictions or decisions
+
+For example:
+
+Predicting house prices
+Recommending products on shopping apps
+Detecting spam emails
+🔑 Types of Machine Learning
+Supervised Learning
+The model learns from labeled data (input + correct output).
+Example: Predicting exam results based on study hours.
+Unsupervised Learning
+The model finds hidden patterns in unlabeled data.
+Example: Grouping customers based on behavior.
+Reinforcement Learning
+The model learns by interacting with an environment using rewards and penalties.
+Example: Training a game-playing AI.

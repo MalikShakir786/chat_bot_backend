@@ -1,5 +1,8 @@
 
 prefix = "/api/v1"
+
+files_storage = "data/uploads"
+
 class DocumentRoutes:
     UPLOAD = "/documents/upload"
     GET_ALL = "/documents/getall"

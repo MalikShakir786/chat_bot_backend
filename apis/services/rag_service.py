@@ -3,7 +3,7 @@ import uuid
 import numpy as np
 import chromadb
 from sentence_transformers import SentenceTransformer
-from langchain_community.document_loaders import PyMuPDFLoader, TextLoader
+from langchain_community.document_loaders import PyMuPDFLoader, TextLoader, Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import List, Any
 
@@ -70,52 +70,72 @@ vector_store = VectorStore()
 
 def ingest_document(file_path: str, file_type: str) -> bool:
     """
-    Loads, splits, embeds, and stores a document in the Chroma vector database.
-    Supports 'pdf' and 'txt' file types.
+    Ingests a document into the vector database for Retrieval-Augmented Generation (RAG).
+
+    Supported file types:
+    - pdf
+    - txt
+    - text
+    - docx
     """
+
     if not os.path.exists(file_path):
         print(f"File not found for RAG ingestion: {file_path}")
         return False
-        
+
     try:
-        # 1. Load document
+        # 1. Load document based on type
         if file_type.lower() == 'pdf':
             loader = PyMuPDFLoader(file_path)
             documents = loader.load()
+
             for doc in documents:
                 doc.metadata['source'] = os.path.basename(file_path)
                 doc.metadata['file_type'] = 'pdf'
+
         elif file_type.lower() in ['txt', 'text']:
             loader = TextLoader(file_path, encoding='utf-8')
             documents = loader.load()
+
             for doc in documents:
                 doc.metadata['source'] = os.path.basename(file_path)
                 doc.metadata['file_type'] = 'txt'
+
+        elif file_type.lower() in ['docx', 'doc']:
+            loader = Docx2txtLoader(file_path)
+            documents = loader.load()
+
+            for doc in documents:
+                doc.metadata['source'] = os.path.basename(file_path)
+                doc.metadata['file_type'] = 'docx'
+
         else:
             print(f"Unsupported file type for RAG ingestion: {file_type}")
             return False
-            
-        # 2. Split documents
+
+        # 2. Split documents into chunks
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000, 
-            chunk_overlap=100, 
+            chunk_size=500,
+            chunk_overlap=50,
             separators=["\n\n", "\n", " ", ""]
         )
+
         splits = text_splitter.split_documents(documents)
-        
+
         if not splits:
             print("No text content could be extracted or split.")
             return False
-            
+
         # 3. Generate embeddings
         texts = [doc.page_content for doc in splits]
         embeddings = embedding_manager.generate_embeddings(texts)
-        
-        # 4. Add to vector store
+
+        # 4. Store in vector database
         vector_store.add_documents(splits, embeddings)
+
         print(f"Successfully ingested document {file_path} into vector store.")
         return True
-        
+
     except Exception as e:
         print(f"Error ingesting document {file_path}: {e}")
         return False
