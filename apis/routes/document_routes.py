@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from apis.models.db_models.db_document_model import DBDocument
 from apis.models.local_models.api_response_model import ApiResponse
 from apis.config.database import get_db
+from apis.models.local_models.document_model import DocumentResponse
+from apis.utils.utils import format_file_size
 from constants.paths import DocumentRoutes, prefix, files_storage
 from apis.services.rag_service import ingest_document
 
@@ -25,6 +27,7 @@ def create_document(file: UploadFile = File(...), db: Session = Depends(get_db))
         file_ext = os.path.splitext(file.filename)[1].lstrip(".")
         
         file_size = os.path.getsize(file_path)
+        file_size = format_file_size(file_size)
 
         new_doc = DBDocument(
             filename=file.filename, file_type=file_ext, file_path=file_path, file_size=file_size
@@ -35,12 +38,15 @@ def create_document(file: UploadFile = File(...), db: Session = Depends(get_db))
         db.refresh(new_doc)
 
         ingest_document(new_doc.file_path, new_doc.file_type)
+        
+        doc = DocumentResponse.model_validate(new_doc)
 
         return ApiResponse(
-            success=True, message="Document uploaded successfully", data=new_doc
+            success=True, message="Document uploaded successfully", data=doc
         )
 
     except Exception as e:
+        print(e)
         return ApiResponse(
             success=False, message="Document upload failed", error_code="UPLOAD_ERROR", data=None
         )
@@ -50,7 +56,7 @@ def create_document(file: UploadFile = File(...), db: Session = Depends(get_db))
 @router.get(DocumentRoutes.GET_ALL, response_model=ApiResponse)
 def get_all_documents(db: Session = Depends(get_db)):
     try:
-        documents = db.query(DBDocument).all()
+        documents = db.query(DBDocument).all()[::-1]
 
         data = [
             {
@@ -83,9 +89,9 @@ def get_all_documents(db: Session = Depends(get_db)):
 
 # Delete Document
 @router.delete(DocumentRoutes.DELETE, response_model=ApiResponse)
-def delete_document(document_id: int, db: Session = Depends(get_db)):
+def delete_document(id: int, db: Session = Depends(get_db)):
     try:
-        document = db.query(DBDocument).filter(DBDocument.id == document_id).first()
+        document = db.query(DBDocument).filter(DBDocument.id == id).first()
 
         if not document:
             return ApiResponse(
@@ -104,7 +110,7 @@ def delete_document(document_id: int, db: Session = Depends(get_db)):
         return ApiResponse(
             success=True,
             message="Document deleted successfully",
-            data={"document_id": document_id},
+            data={"document_id": id},
         )
 
     except Exception:

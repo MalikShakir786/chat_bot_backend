@@ -11,5 +11,5 @@ class DBDocument(Base):
     filename = Column(String)
     file_type = Column(String)
     file_path = Column(Text)
-    file_size = Column(Float)
-    uploaded_at = Column(DateTime, default=datetime.now())
+    file_size = Column(String)
+    uploaded_at = Column(DateTime, default=datetime.now)

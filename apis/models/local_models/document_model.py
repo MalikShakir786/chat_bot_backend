@@ -6,7 +6,7 @@ class DocumentCreate(BaseModel):
     filename: str
     file_type: str
     file_path: str
-    file_size: float
+    file_size: str
 
 
 class DocumentResponse(BaseModel):
@@ -14,5 +14,9 @@ class DocumentResponse(BaseModel):
     filename: str
     file_type: str
     file_path: str
-    file_size: float
+    file_size: str
     uploaded_at: datetime
+    
+    model_config = {
+        "from_attributes": True
+    }

@@ -6,7 +6,7 @@ files_storage = "data/uploads"
 class DocumentRoutes:
     UPLOAD = "/documents/upload"
     GET_ALL = "/documents/getall"
-    DELETE = "/documents/delete/{document_id}"
+    DELETE = "/documents/delete"
 
 
 class ChatRoutes:
