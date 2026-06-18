@@ -6,6 +6,7 @@ class DocumentCreate(BaseModel):
     filename: str
     file_type: str
     file_path: str
+    file_size: float
 
 
 class DocumentResponse(BaseModel):
@@ -13,4 +14,5 @@ class DocumentResponse(BaseModel):
     filename: str
     file_type: str
     file_path: str
+    file_size: float
     uploaded_at: datetime

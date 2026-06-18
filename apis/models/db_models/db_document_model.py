@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime, Text, Float
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -11,4 +11,5 @@ class DBDocument(Base):
     filename = Column(String)
     file_type = Column(String)
     file_path = Column(Text)
+    file_size = Column(Float)
     uploaded_at = Column(DateTime, default=datetime.now())

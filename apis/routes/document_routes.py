@@ -1,6 +1,5 @@
 import os
-from typing import List
-from fastapi import Depends, APIRouter, UploadFile, File, HTTPException
+from fastapi import Depends, APIRouter, UploadFile, File
 from sqlalchemy.orm import Session
 
 from apis.models.db_models.db_document_model import DBDocument
@@ -24,9 +23,11 @@ def create_document(file: UploadFile = File(...), db: Session = Depends(get_db))
             f.write(file.file.read())
 
         file_ext = os.path.splitext(file.filename)[1].lstrip(".")
+        
+        file_size = os.path.getsize(file_path)
 
         new_doc = DBDocument(
-            filename=file.filename, file_type=file_ext, file_path=file_path
+            filename=file.filename, file_type=file_ext, file_path=file_path, file_size=file_size
         )
 
         db.add(new_doc)
@@ -57,6 +58,7 @@ def get_all_documents(db: Session = Depends(get_db)):
                 "filename": doc.filename,
                 "file_type": doc.file_type,
                 "file_path": doc.file_path,
+                "file_size": doc.file_size,
                 "uploaded_at": doc.uploaded_at
             }
             for doc in documents
