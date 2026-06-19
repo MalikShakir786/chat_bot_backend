@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, String, DateTime, Text, Float
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
+from .base import Base
 
-Base = declarative_base()
 
 class DBDocument(Base):
     __tablename__ = "documents"

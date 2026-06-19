@@ -1,12 +1,14 @@
-# Entry point for the FastAPI Chatbot Backend application
 from fastapi import FastAPI
-from apis.routes import router as task_router
-import apis.models.db_models.db_document_model as dbModel
+from apis.routes.document_routes import router as document_router
+from apis.routes.chat_routes import router as chat_router
 from apis.config.database import engine
-
+from apis.models.db_models.db_document_model import Base
 
 app = FastAPI()
 
-app.include_router(task_router)
+# Include both routers
+app.include_router(document_router)
+app.include_router(chat_router)
 
-dbModel.Base.metadata.create_all(bind=engine)
+# Create tables
+Base.metadata.create_all(bind=engine)
