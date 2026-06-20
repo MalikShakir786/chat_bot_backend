@@ -14,3 +14,6 @@ sqlalchemy
 psycopg2
 python-multipart
 docx2txt
+passlib
+python-jose[cryptography]
+argon2_cffi

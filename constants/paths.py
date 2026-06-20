@@ -16,4 +16,6 @@ class ChatRoutes:
 
 class AuthRoutes:
     LOGIN = "/auth/login"
+    TOKEN = "/auth/token"
     SIGNUP = "/auth/signup"
+    REFRESH = "/auth/refresh"
