@@ -4,9 +4,10 @@ from typing import List, Optional
 
 
 class ChatRequest(BaseModel):
-    query: str = Field(..., min_length=1, description="The user's question")
-    top_k: int = Field(default=3, ge=1, le=20, description="Number of chunks to retrieve")
-    min_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Minimum similarity score (0-1) for a chunk to be used")
+    user_id: int
+    query: str = Field(..., min_length=1)
+    top_k: int = Field(default=3, ge=1, le=20)
+    min_score: float = Field(default=0.0, ge=0.0, le=1.0)
 
 
 class SourceItem(BaseModel):
@@ -17,20 +18,14 @@ class SourceItem(BaseModel):
     preview: str
 
 
-class ChatResponse(BaseModel):
+class ChatModel(BaseModel):
+    id: Optional[int] = None
+    user_id: Optional[int] = None
     query: str
     answer: str
     sources: List[SourceItem]
     confidence: float
-    has_context: bool
-
-
-class ChatHistoryItem(BaseModel):
-    id: int
-    query: str
-    answer: str
-    sources: List[SourceItem]
-    confidence: float
-    created_at: datetime
+    has_context: Optional[bool] = None
+    created_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}

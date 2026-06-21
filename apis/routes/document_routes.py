@@ -9,13 +9,18 @@ from apis.models.local_models.document_model import DocumentResponse
 from apis.utils.utils import format_file_size
 from constants.paths import DocumentRoutes, prefix, files_storage
 from apis.services.rag_service import ingest_document
+import apis.utils.exceptions as exc
 
 router = APIRouter(prefix=prefix, tags=["Documents"])
 
 
 # Upload Document
 @router.post(DocumentRoutes.UPLOAD, response_model=ApiResponse)
-def create_document(file: UploadFile = File(...), db: Session = Depends(get_db)):
+def create_document(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
     try:
         os.makedirs(files_storage, exist_ok=True)
 
@@ -25,12 +30,14 @@ def create_document(file: UploadFile = File(...), db: Session = Depends(get_db))
             f.write(file.file.read())
 
         file_ext = os.path.splitext(file.filename)[1].lstrip(".")
-        
-        file_size = os.path.getsize(file_path)
-        file_size = format_file_size(file_size)
+        file_size = format_file_size(os.path.getsize(file_path))
 
         new_doc = DBDocument(
-            filename=file.filename, file_type=file_ext, file_path=file_path, file_size=file_size
+            user_id=user_id,
+            filename=file.filename,
+            file_type=file_ext,
+            file_path=file_path,
+            file_size=file_size
         )
 
         db.add(new_doc)
@@ -38,67 +45,67 @@ def create_document(file: UploadFile = File(...), db: Session = Depends(get_db))
         db.refresh(new_doc)
 
         ingest_document(new_doc.file_path, new_doc.file_type)
-        
-        doc = DocumentResponse.model_validate(new_doc)
 
         return ApiResponse(
-            success=True, message="Document uploaded successfully", data=doc
+            success=True,
+            message="Document uploaded successfully",
+            data=DocumentResponse.model_validate(new_doc)
         )
 
     except Exception as e:
-        print(e)
-        return ApiResponse(
-            success=False, message="Document upload failed", error_code="UPLOAD_ERROR", data=None
+        raise exc.AppException(
+            status_code=500,
+            message=f"Upload failed: {str(e)}",
+            error_code="UPLOAD_ERROR"
         )
-
 
 # Get All Documents
 @router.get(DocumentRoutes.GET_ALL, response_model=ApiResponse)
-def get_all_documents(db: Session = Depends(get_db)):
+def get_all_documents(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
     try:
-        documents = db.query(DBDocument).all()[::-1]
-
-        data = [
-            {
-                "id": doc.id,
-                "filename": doc.filename,
-                "file_type": doc.file_type,
-                "file_path": doc.file_path,
-                "file_size": doc.file_size,
-                "uploaded_at": doc.uploaded_at
-            }
-            for doc in documents
-        ]
+        documents = (
+            db.query(DBDocument)
+            .filter(DBDocument.user_id == user_id)
+            .order_by(DBDocument.uploaded_at.desc())
+            .all()
+        )
 
         return ApiResponse(
             success=True,
             message="Documents fetched successfully",
-            data=data
+            data=[
+                DocumentResponse.model_validate(doc)
+                for doc in documents
+            ]
         )
 
     except Exception as e:
-        print("GET_ALL_ERROR:", str(e))  # for debugging
-
-        return ApiResponse(
-            success=False,
-            message="Failed to fetch documents",
-            error_code="GET_ALL_ERROR",
-            data=None
+        raise exc.AppException(
+            status_code=500,
+            message=f"Failed to fetch documents: {str(e)}",
+            error_code="GET_ALL_ERROR"
         )
-
 
 # Delete Document
 @router.delete(DocumentRoutes.DELETE, response_model=ApiResponse)
-def delete_document(id: int, db: Session = Depends(get_db)):
+def delete_document(
+    id: int,
+    user_id: int,
+    db: Session = Depends(get_db)
+):
     try:
-        document = db.query(DBDocument).filter(DBDocument.id == id).first()
+        document = db.query(DBDocument).filter(
+            DBDocument.id == id,
+            DBDocument.user_id == user_id
+        ).first()
 
         if not document:
-            return ApiResponse(
-            success=False,
-            message="Document not found",
-            error_code="DOCUMENT_NOT_FOUND",
-            data=None
+            raise exc.NotFoundException(
+                message="Document not found",
+                error_code="DOCUMENT_NOT_FOUND"
             )
 
         if os.path.exists(document.file_path):
@@ -110,13 +117,15 @@ def delete_document(id: int, db: Session = Depends(get_db)):
         return ApiResponse(
             success=True,
             message="Document deleted successfully",
-            data={"document_id": id},
+            data={"document_id": id}
         )
 
-    except Exception:
-        return ApiResponse(
-            success=False,
-            message="Failed to delete document",
-            error_code="DELETE_ERROR",
-            data=None
+    except exc.NotFoundException:
+        raise
+
+    except Exception as e:
+        raise exc.AppException(
+            status_code=500,
+            message=f"Delete failed: {str(e)}",
+            error_code="DELETE_ERROR"
         )

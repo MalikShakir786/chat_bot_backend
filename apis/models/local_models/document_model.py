@@ -8,15 +8,14 @@ class DocumentCreate(BaseModel):
     file_path: str
     file_size: str
 
-
 class DocumentResponse(BaseModel):
     id: int
+    user_id: int
     filename: str
     file_type: str
     file_path: str
     file_size: str
     uploaded_at: datetime
-    
-    model_config = {
-        "from_attributes": True
-    }
+
+    class Config:
+        from_attributes = True
