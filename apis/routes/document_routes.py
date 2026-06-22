@@ -9,6 +9,7 @@ from apis.models.local_models.document_model import DocumentResponse
 from apis.utils.utils import format_file_size
 from constants.paths import DocumentRoutes, prefix, files_storage
 from apis.services.rag_service import ingest_document
+from apis.services.jwt_service import get_current_user
 import apis.utils.exceptions as exc
 
 router = APIRouter(prefix=prefix, tags=["Documents"])
@@ -17,8 +18,8 @@ router = APIRouter(prefix=prefix, tags=["Documents"])
 # Upload Document
 @router.post(DocumentRoutes.UPLOAD, response_model=ApiResponse)
 def create_document(
-    user_id: int,
     file: UploadFile = File(...),
+    user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     try:
@@ -62,7 +63,7 @@ def create_document(
 # Get All Documents
 @router.get(DocumentRoutes.GET_ALL, response_model=ApiResponse)
 def get_all_documents(
-    user_id: int,
+    user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     try:
@@ -93,7 +94,7 @@ def get_all_documents(
 @router.delete(DocumentRoutes.DELETE, response_model=ApiResponse)
 def delete_document(
     id: int,
-    user_id: int,
+    user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     try:

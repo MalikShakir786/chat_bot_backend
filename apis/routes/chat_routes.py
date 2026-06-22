@@ -8,6 +8,7 @@ from apis.config.database import get_db
 from apis.models.local_models.chat_model import ChatRequest, ChatModel, SourceItem
 from constants.paths import ChatRoutes, prefix
 from apis.services.rag_service import query_documents
+from apis.services.jwt_service import get_current_user
 import apis.utils.exceptions as exc
 
 router = APIRouter(prefix=prefix, tags=["Chat"])
@@ -67,7 +68,7 @@ def send_message(
 # Get chat history
 @router.get(ChatRoutes.HISTORY, response_model=ApiResponse)
 def get_chat_history(
-    user_id: int,
+    user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     try:

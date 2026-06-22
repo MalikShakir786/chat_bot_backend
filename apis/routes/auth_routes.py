@@ -72,9 +72,9 @@ def login(user: LoginModel, db: Session = Depends(get_db)):
             message="Invalid password",
             error_code="INVALID_PASSWORD"
         )
-
-    access_token = create_access_token({"sub": str(db_user.id)})
-    refresh_token = create_refresh_token({"sub": str(db_user.id)})
+        
+    access_token = create_access_token({"user_id": db_user.id})
+    refresh_token = create_refresh_token({"user_id": db_user.id})
 
     return ApiResponse(
         success=True,
